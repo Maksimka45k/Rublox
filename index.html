@@ -1,0 +1,1001 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rublox</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Arial Rounded MT Bold', sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            color: white;
+            overflow: hidden;
+            height: 100vh;
+        }
+        
+        /* Меню выбора игр */
+        #gameMenu {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(rgba(0,0,0,0.9), rgba(0,0,0,0.9));
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            transition: opacity 0.5s;
+        }
+        
+        .menu-title {
+            font-size: 4rem;
+            margin-bottom: 2rem;
+            text-align: center;
+            color: #00adb5;
+            text-shadow: 0 0 20px #00adb5;
+            animation: glow 2s infinite alternate;
+        }
+        
+        @keyframes glow {
+            from { text-shadow: 0 0 10px #00adb5; }
+            to { text-shadow: 0 0 30px #00adb5, 0 0 40px #00adb5; }
+        }
+        
+        .games-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 300px);
+            gap: 30px;
+            margin: 30px 0;
+        }
+        
+        .game-card {
+            background: rgba(30, 30, 46, 0.8);
+            border-radius: 20px;
+            padding: 25px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            border: 3px solid #393e46;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.3);
+        }
+        
+        .game-card:hover {
+            transform: translateY(-10px);
+            border-color: #00adb5;
+            box-shadow: 0 15px 30px rgba(0, 173, 181, 0.4);
+        }
+        
+        .game-icon {
+            font-size: 4rem;
+            margin-bottom: 15px;
+            color: #00adb5;
+        }
+        
+        .game-title {
+            font-size: 1.8rem;
+            margin-bottom: 10px;
+            color: #eeeeee;
+        }
+        
+        .game-desc {
+            color: #bbbbbb;
+            font-size: 1rem;
+            line-height: 1.4;
+        }
+        
+        .difficulty {
+            margin-top: 10px;
+            display: flex;
+            justify-content: center;
+            gap: 5px;
+        }
+        
+        .difficulty-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: #393e46;
+        }
+        
+        .difficulty-dot.active {
+            background: #00adb5;
+        }
+        
+        .back-button {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background: rgba(0, 173, 181, 0.2);
+            border: 2px solid #00adb5;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 1.1rem;
+            display: none;
+            z-index: 1001;
+            transition: all 0.3s;
+        }
+        
+        .back-button:hover {
+            background: rgba(0, 173, 181, 0.4);
+            transform: scale(1.05);
+        }
+        
+        .view-toggle {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: rgba(57, 62, 70, 0.8);
+            border: 2px solid #00adb5;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 1.1rem;
+            display: none;
+            z-index: 1001;
+            transition: all 0.3s;
+        }
+        
+        .view-toggle:hover {
+            background: rgba(0, 173, 181, 0.4);
+        }
+        
+        /* UI элементы игры */
+        #gameUI {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 100;
+        }
+        
+        .ui-element {
+            position: absolute;
+            background: rgba(0, 0, 0, 0.6);
+            padding: 10px 15px;
+            border-radius: 10px;
+            border: 2px solid #00adb5;
+            color: white;
+            font-size: 1.1rem;
+            pointer-events: none;
+        }
+        
+        #controlsInfo {
+            bottom: 20px;
+            left: 20px;
+            max-width: 300px;
+        }
+        
+        #gameInfo {
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            text-align: center;
+        }
+        
+        /* Канвас для игры */
+        #gameCanvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+        }
+    </style>
+</head>
+<body>
+    <!-- Меню выбора игр -->
+    <div id="gameMenu">
+        <h1 class="menu-title">🎮 Rublox</h1>
+        <div class="games-grid">
+            <div class="game-card" onclick="startGame('parkour-easy')">
+                <div class="game-icon">🏃‍♂️</div>
+                <h2 class="game-title">Паркур: Начальный</h2>
+                <p class="game-desc">Простой паркур для начинающих. Прыгай по платформам и дойди до финиша!</p>
+                <div class="difficulty">
+                    <div class="difficulty-dot active"></div>
+                    <div class="difficulty-dot"></div>
+                    <div class="difficulty-dot"></div>
+                </div>
+            </div>
+            
+            <div class="game-card" onclick="startGame('parkour-medium')">
+                <div class="game-icon">🚀</div>
+                <h2 class="game-title">Паркур: Продвинутый</h2>
+                <p class="game-desc">Сложный паркур с подвижными платформами и препятствиями.</p>
+                <div class="difficulty">
+                    <div class="difficulty-dot active"></div>
+                    <div class="difficulty-dot active"></div>
+                    <div class="difficulty-dot"></div>
+                </div>
+            </div>
+            
+            <div class="game-card" onclick="startGame('parkour-hard')">
+                <div class="game-icon">🔥</div>
+                <h2 class="game-title">Паркур: Эксперт</h2>
+                <p class="game-desc">Экстремальный паркур для настоящих мастеров. Очень сложно!</p>
+                <div class="difficulty">
+                    <div class="difficulty-dot active"></div>
+                    <div class="difficulty-dot active"></div>
+                    <div class="difficulty-dot active"></div>
+                </div>
+            </div>
+            
+            <div class="game-card" onclick="startGame('collection')">
+                <div class="game-icon">⭐</div>
+                <h2 class="game-title">Сбор Предметов</h2>
+                <p class="game-desc">Собери все звёзды на карте, избегая препятствий!</p>
+                <div class="difficulty">
+                    <div class="difficulty-dot active"></div>
+                    <div class="difficulty-dot"></div>
+                    <div class="difficulty-dot"></div>
+                </div>
+            </div>
+        </div>
+        <p style="margin-top: 30px; color: #888; font-size: 1.1rem;">Выберите игру и нажмите для начала</p>
+    </div>
+    
+    <!-- Кнопки управления -->
+    <button class="back-button" onclick="backToMenu()">← В меню</button>
+    <button class="view-toggle" onclick="toggleView()">Переключить вид (3-е лицо)</button>
+    
+    <!-- UI игры -->
+    <div id="gameUI" style="display: none;">
+        <div class="ui-element" id="controlsInfo">
+            <strong>Управление:</strong><br>
+            WASD/Стрелки - Движение<br>
+            Пробел - Прыжок<br>
+            Мышь - Поворот камеры<br>
+            F - Переключить вид
+        </div>
+        <div class="ui-element" id="gameInfo">
+            <div id="gameStats">Игра: Паркур | Собрано: 0</div>
+        </div>
+    </div>
+    
+    <!-- Канвас для 3D -->
+    <canvas id="gameCanvas"></canvas>
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script>
+        // Основные переменные
+        let scene, camera, renderer, player, currentGame = '';
+        let keys = {};
+        let mouse = { x: 0, y: 0 };
+        let isThirdPerson = true;
+        let cameraDistance = 8;
+        let cameraHeight = 4;
+        let playerVelocity = new THREE.Vector3();
+        let isOnGround = false;
+        let jumpForce = 3;
+        let gravity = 0.5;
+        let gameObjects = [];
+        let collectedItems = 0;
+        let totalItems = 0;
+        let movingPlatforms = [];
+        let playerDirection = new THREE.Vector3();
+        let clock = new THREE.Clock();
+        let delta = 0;
+        
+        // Инициализация игры
+        function init() {
+            // Создаем сцену
+            scene = new THREE.Scene();
+            scene.fog = new THREE.Fog(0x16213e, 10, 50);
+            
+            // Создаем камеру
+            camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+            
+            // Создаем рендерер
+            renderer = new THREE.WebGLRenderer({ 
+                canvas: document.getElementById('gameCanvas'), 
+                antialias: true 
+            });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.shadowMap.enabled = true;
+            renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+            
+            // Освещение
+            const ambientLight = new THREE.AmbientLight(0x404040, 0.6);
+            scene.add(ambientLight);
+            
+            const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
+            directionalLight.position.set(10, 20, 5);
+            directionalLight.castShadow = true;
+            scene.add(directionalLight);
+            
+            // Обработчики событий
+            window.addEventListener('resize', onWindowResize);
+            document.addEventListener('keydown', onKeyDown);
+            document.addEventListener('keyup', onKeyUp);
+            document.addEventListener('mousemove', onMouseMove);
+            document.addEventListener('click', lockPointer);
+            
+            // Начинаем анимацию
+            animate();
+        }
+        
+        // Запуск выбранной игры
+        function startGame(gameType) {
+            currentGame = gameType;
+            
+            // Показываем игровые элементы
+            document.getElementById('gameMenu').style.display = 'none';
+            document.getElementById('gameUI').style.display = 'block';
+            document.querySelector('.back-button').style.display = 'block';
+            document.querySelector('.view-toggle').style.display = 'block';
+            
+            // Очищаем предыдущую игру
+            while(scene.children.length > 0){ 
+                scene.remove(scene.children[0]); 
+            }
+            gameObjects = [];
+            movingPlatforms = [];
+            collectedItems = 0;
+            playerVelocity.set(0, 0, 0);
+            
+            // Создаем игрока
+            createPlayer();
+            
+            // Создаем мир в зависимости от типа игры
+            switch(gameType) {
+                case 'parkour-easy':
+                    createParkourWorld('easy');
+                    document.getElementById('gameStats').textContent = 'Игра: Паркур (Начальный) | Платформ пройдено: 0/10';
+                    break;
+                case 'parkour-medium':
+                    createParkourWorld('medium');
+                    document.getElementById('gameStats').textContent = 'Игра: Паркур (Продвинутый) | Платформ пройдено: 0/15';
+                    break;
+                case 'parkour-hard':
+                    createParkourWorld('hard');
+                    document.getElementById('gameStats').textContent = 'Игра: Паркур (Эксперт) | Платформ пройдено: 0/20';
+                    break;
+                case 'collection':
+                    createCollectionWorld();
+                    document.getElementById('gameStats').textContent = 'Игра: Сбор предметов | Собрано: 0/' + totalItems;
+                    break;
+            }
+            
+            // Добавляем освещение заново
+            const ambientLight = new THREE.AmbientLight(0x404040, 0.6);
+            scene.add(ambientLight);
+            
+            const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
+            directionalLight.position.set(10, 20, 5);
+            directionalLight.castShadow = true;
+            scene.add(directionalLight);
+            
+            // Устанавливаем начальную позицию камеры
+            updateCamera();
+            
+            // Блокируем указатель мыши для управления камерой
+            lockPointer();
+        }
+        
+        // Создание игрока в стиле Roblox
+        function createPlayer() {
+            const playerGroup = new THREE.Group();
+            
+            // Тело (главный бокс для коллизий)
+            const bodyGeometry = new THREE.BoxGeometry(1, 2, 1);
+            const bodyMaterial = new THREE.MeshPhongMaterial({ 
+                color: 0x00adb5,
+                transparent: true,
+                opacity: 0.5
+            });
+            const body = new THREE.Mesh(bodyGeometry, bodyMaterial);
+            body.position.y = 1;
+            body.castShadow = true;
+            playerGroup.add(body);
+            
+            // Визуальное представление игрока (Roblox-стиль)
+            const visualPlayer = new THREE.Group();
+            
+            // Голова
+            const headGeometry = new THREE.BoxGeometry(1, 1, 1);
+            const headMaterial = new THREE.MeshPhongMaterial({ color: 0x393e46 });
+            const head = new THREE.Mesh(headGeometry, headMaterial);
+            head.position.y = 1.7;
+            visualPlayer.add(head);
+            
+            // Туловище
+            const torsoGeometry = new THREE.BoxGeometry(1.2, 1.5, 0.8);
+            const torsoMaterial = new THREE.MeshPhongMaterial({ color: 0x00adb5 });
+            const torso = new THREE.Mesh(torsoGeometry, torsoMaterial);
+            torso.position.y = 0.5;
+            visualPlayer.add(torso);
+            
+            // Руки
+            const armGeometry = new THREE.BoxGeometry(0.4, 1.2, 0.4);
+            const armMaterial = new THREE.MeshPhongMaterial({ color: 0x393e46 });
+            
+            const leftArm = new THREE.Mesh(armGeometry, armMaterial);
+            leftArm.position.set(-0.9, 0.6, 0);
+            visualPlayer.add(leftArm);
+            
+            const rightArm = new THREE.Mesh(armGeometry, armMaterial);
+            rightArm.position.set(0.9, 0.6, 0);
+            visualPlayer.add(rightArm);
+            
+            // Ноги
+            const legGeometry = new THREE.BoxGeometry(0.5, 1.2, 0.5);
+            const legMaterial = new THREE.MeshPhongMaterial({ color: 0x393e46 });
+            
+            const leftLeg = new THREE.Mesh(legGeometry, legMaterial);
+            leftLeg.position.set(-0.4, -0.4, 0);
+            visualPlayer.add(leftLeg);
+            
+            const rightLeg = new THREE.Mesh(legGeometry, legMaterial);
+            rightLeg.position.set(0.4, -0.4, 0);
+            visualPlayer.add(rightLeg);
+            
+            visualPlayer.position.y = 1;
+            playerGroup.add(visualPlayer);
+            
+            player = playerGroup;
+            player.position.set(0, 5, 10);
+            player.velocity = new THREE.Vector3(0, 0, 0);
+            player.isOnGround = false;
+            
+            scene.add(player);
+            
+            // Создаем физическое тело для коллизий
+            player.collider = {
+                size: new THREE.Vector3(1, 2, 1),
+                position: player.position,
+                velocity: new THREE.Vector3(0, 0, 0)
+            };
+        }
+        
+        // Создание мира для паркура
+        function createParkourWorld(difficulty) {
+            // Пол
+            const floorGeometry = new THREE.BoxGeometry(100, 1, 100);
+            const floorMaterial = new THREE.MeshPhongMaterial({ color: 0x222831 });
+            const floor = new THREE.Mesh(floorGeometry, floorMaterial);
+            floor.position.set(0, -0.5, 0);
+            floor.receiveShadow = true;
+            floor.userData = { type: 'ground' };
+            scene.add(floor);
+            gameObjects.push(floor);
+            
+            let platformCount = 0;
+            let lastPlatform = null;
+            
+            // Создаем платформы в зависимости от сложности
+            switch(difficulty) {
+                case 'easy':
+                    platformCount = 10;
+                    // Простой паркур - прямые платформы
+                    for(let i = 0; i < platformCount; i++) {
+                        const x = (i % 2 === 0) ? 2 : -2;
+                        const z = (i + 1) * 6;
+                        const y = i * 1.5;
+                        
+                        const platform = createPlatform(x, y, z, 4, 0.5, 2, 0x393e46);
+                        platform.userData.platformId = i + 1;
+                        lastPlatform = platform;
+                    }
+                    break;
+                    
+                case 'medium':
+                    platformCount = 15;
+                    // Средняя сложность
+                    let currentX = 0;
+                    let currentZ = 0;
+                    let currentY = 2;
+                    
+                    for(let i = 0; i < platformCount; i++) {
+                        currentX += (Math.random() * 6 - 3);
+                        currentZ += 5;
+                        currentY += Math.random() * 2;
+                        
+                        const platform = createPlatform(currentX, currentY, currentZ, 
+                            Math.random() * 2 + 2, 0.5, Math.random() * 2 + 2, 0x393e46);
+                        platform.userData.platformId = i + 1;
+                        lastPlatform = platform;
+                        
+                        // Каждая 3-я платформа движется
+                        if(i % 3 === 0 && i > 0) {
+                            platform.moveDirection = 1;
+                            platform.moveSpeed = 0.5;
+                            platform.originalX = currentX;
+                            movingPlatforms.push(platform);
+                        }
+                    }
+                    break;
+                    
+                case 'hard':
+                    platformCount = 20;
+                    // Сложный паркур
+                    let lastX = 0;
+                    let lastZ = 0;
+                    let lastY = 3;
+                    
+                    for(let i = 0; i < platformCount; i++) {
+                        lastX += (Math.random() * 8 - 4);
+                        lastZ += 4;
+                        lastY += Math.random() * 3 - 1;
+                        if(lastY < 3) lastY = 3;
+                        
+                        const width = Math.random() * 1.5 + 1;
+                        const depth = Math.random() * 1.5 + 1;
+                        
+                        const platform = createPlatform(lastX, lastY, lastZ, width, 0.3, depth, 
+                            i % 3 === 0 ? 0xff2e63 : 0x393e46);
+                        platform.userData.platformId = i + 1;
+                        lastPlatform = platform;
+                        
+                        // Больше подвижных платформ
+                        if(i % 2 === 0 && i > 0) {
+                            if(Math.random() > 0.5) {
+                                platform.rotationSpeed = 0.5;
+                            } else {
+                                platform.moveDirection = 1;
+                                platform.moveSpeed = 0.8;
+                                platform.originalX = lastX;
+                            }
+                            movingPlatforms.push(platform);
+                        }
+                    }
+                    break;
+            }
+            
+            // Финальная платформа
+            if(lastPlatform) {
+                const finalPlatform = createPlatform(
+                    lastPlatform.position.x, 
+                    lastPlatform.position.y + 3, 
+                    lastPlatform.position.z + 8, 
+                    5, 1, 5, 0x00ff88
+                );
+                finalPlatform.userData.type = 'finish';
+            }
+            
+            // Добавляем декорации
+            for(let i = 0; i < 20; i++) {
+                const tree = createTree(
+                    Math.random() * 80 - 40,
+                    -0.5,
+                    Math.random() * 80 - 40
+                );
+                scene.add(tree);
+            }
+        }
+        
+        // Создание мира для сбора предметов
+        function createCollectionWorld() {
+            // Пол
+            const floorGeometry = new THREE.BoxGeometry(80, 1, 80);
+            const floorMaterial = new THREE.MeshPhongMaterial({ color: 0x222831 });
+            const floor = new THREE.Mesh(floorGeometry, floorMaterial);
+            floor.position.set(0, -0.5, 0);
+            floor.receiveShadow = true;
+            floor.userData = { type: 'ground' };
+            scene.add(floor);
+            gameObjects.push(floor);
+            
+            // Создаем предметы для сбора
+            totalItems = 10;
+            const positions = [];
+            
+            for(let i = 0; i < totalItems; i++) {
+                let x, z;
+                let validPosition = false;
+                
+                // Генерируем позиции, чтобы предметы не были слишком близко
+                while(!validPosition) {
+                    x = Math.random() * 60 - 30;
+                    z = Math.random() * 60 - 30;
+                    
+                    validPosition = true;
+                    for(let pos of positions) {
+                        if(Math.sqrt((x-pos.x)**2 + (z-pos.z)**2) < 8) {
+                            validPosition = false;
+                            break;
+                        }
+                    }
+                }
+                
+                positions.push({x, z});
+                const star = createStar(x, 2, z);
+                gameObjects.push(star);
+                scene.add(star);
+            }
+            
+            // Добавляем препятствия
+            for(let i = 0; i < 15; i++) {
+                const x = Math.random() * 50 - 25;
+                const z = Math.random() * 50 - 25;
+                
+                // Проверяем, чтобы препятствие не было на старте
+                if(Math.sqrt(x**2 + z**2) > 10) {
+                    const obstacle = createObstacle(x, 1, z);
+                    scene.add(obstacle);
+                    gameObjects.push(obstacle);
+                }
+            }
+            
+            // Декорации
+            for(let i = 0; i < 30; i++) {
+                const tree = createTree(
+                    Math.random() * 70 - 35,
+                    -0.5,
+                    Math.random() * 70 - 35
+                );
+                scene.add(tree);
+            }
+        }
+        
+        // Создание платформы
+        function createPlatform(x, y, z, width, height, depth, color) {
+            const geometry = new THREE.BoxGeometry(width, height, depth);
+            const material = new THREE.MeshPhongMaterial({ color: color });
+            const platform = new THREE.Mesh(geometry, material);
+            platform.position.set(x, y, z);
+            platform.castShadow = true;
+            platform.receiveShadow = true;
+            platform.userData = { type: 'platform' };
+            scene.add(platform);
+            gameObjects.push(platform);
+            return platform;
+        }
+        
+        // Создание дерева
+        function createTree(x, y, z) {
+            const tree = new THREE.Group();
+            
+            // Ствол
+            const trunkGeometry = new THREE.CylinderGeometry(0.3, 0.5, 2);
+            const trunkMaterial = new THREE.MeshPhongMaterial({ color: 0x8B4513 });
+            const trunk = new THREE.Mesh(trunkGeometry, trunkMaterial);
+            trunk.position.y = 1;
+            trunk.castShadow = true;
+            
+            // Крона
+            const crownGeometry = new THREE.ConeGeometry(2, 4, 8);
+            const crownMaterial = new THREE.MeshPhongMaterial({ color: 0x2d5a27 });
+            const crown = new THREE.Mesh(crownGeometry, crownMaterial);
+            crown.position.y = 4;
+            crown.castShadow = true;
+            
+            tree.add(trunk);
+            tree.add(crown);
+            tree.position.set(x, y, z);
+            
+            return tree;
+        }
+        
+        // Создание звезды для сбора
+        function createStar(x, y, z) {
+            const starGroup = new THREE.Group();
+            
+            // Центр звезды
+            const starGeometry = new THREE.SphereGeometry(0.5);
+            const starMaterial = new THREE.MeshPhongMaterial({ 
+                color: 0xffd700,
+                emissive: 0xffaa00,
+                emissiveIntensity: 0.5
+            });
+            const star = new THREE.Mesh(starGeometry, starMaterial);
+            star.castShadow = true;
+            
+            starGroup.add(star);
+            starGroup.position.set(x, y, z);
+            starGroup.userData = { 
+                type: 'collectible',
+                collected: false,
+                rotationSpeed: 0.05
+            };
+            
+            return starGroup;
+        }
+        
+        // Создание препятствия
+        function createObstacle(x, y, z) {
+            const height = Math.random() * 3 + 1;
+            const geometry = new THREE.CylinderGeometry(0.8, 0.8, height);
+            const material = new THREE.MeshPhongMaterial({ color: 0xff2e63 });
+            const obstacle = new THREE.Mesh(geometry, material);
+            obstacle.position.set(x, y + height/2, z);
+            obstacle.castShadow = true;
+            obstacle.receiveShadow = true;
+            obstacle.userData = { type: 'obstacle' };
+            return obstacle;
+        }
+        
+        // Проверка коллизий
+        function checkCollisions() {
+            if(!player) return false;
+            
+            const playerBox = new THREE.Box3().setFromObject(player);
+            playerBox.min.y += 0.5; // Учитываем только нижнюю часть
+            playerBox.max.y -= 0.5;
+            
+            let isGrounded = false;
+            let hitSomething = false;
+            
+            for(let obj of gameObjects) {
+                if(!obj.geometry || !obj.visible) continue;
+                
+                const objBox = new THREE.Box3().setFromObject(obj);
+                
+                if(playerBox.intersectsBox(objBox)) {
+                    hitSomething = true;
+                    
+                    // Если это земля или платформа
+                    if(obj.userData.type === 'ground' || obj.userData.type === 'platform') {
+                        const playerBottom = player.position.y - 1;
+                        const platformTop = obj.position.y + obj.geometry.parameters.height/2;
+                        
+                        if(playerBottom <= platformTop + 0.2 && player.velocity.y <= 0) {
+                            player.position.y = platformTop + 1;
+                            player.velocity.y = 0;
+                            isGrounded = true;
+                            
+                            // Обновляем счетчик для паркура
+                            if(currentGame.includes('parkour') && obj.userData.platformId) {
+                                document.getElementById('gameStats').textContent = 
+                                    `Игра: Паркур | Платформ пройдено: ${obj.userData.platformId}`;
+                            }
+                        }
+                    }
+                    
+                    // Если это собираемый предмет
+                    if(obj.userData.type === 'collectible' && !obj.userData.collected) {
+                        obj.userData.collected = true;
+                        obj.visible = false;
+                        collectedItems++;
+                        
+                        // Обновляем UI
+                        if(currentGame === 'collection') {
+                            document.getElementById('gameStats').textContent = 
+                                `Игра: Сбор предметов | Собрано: ${collectedItems}/${totalItems}`;
+                            
+                            if(collectedItems === totalItems) {
+                                document.getElementById('gameStats').textContent += ' | ВСЕ ПРЕДМЕТЫ СОБРАНЫ!';
+                            }
+                        }
+                    }
+                    
+                    // Если это препятствие
+                    if(obj.userData.type === 'obstacle') {
+                        // Отталкиваем игрока
+                        const pushDirection = new THREE.Vector3()
+                            .subVectors(player.position, obj.position)
+                            .normalize();
+                        player.position.add(pushDirection.multiplyScalar(0.5));
+                    }
+                }
+            }
+            
+            player.isOnGround = isGrounded;
+            return hitSomething;
+        }
+        
+        // Движение игрока
+        function updatePlayer(deltaTime) {
+            if(!player) return;
+            
+            // Применяем гравитацию
+            player.velocity.y -= gravity * deltaTime * 60;
+            
+            // Ограничиваем максимальную скорость падения
+            player.velocity.y = Math.max(player.velocity.y, -15);
+            
+            // Движение на основе нажатых клавиш
+            const moveSpeed = 0.6 * deltaTime * 60;
+            const moveVector = new THREE.Vector3();
+            
+            if(keys['w'] || keys['arrowup']) {
+			moveVector.z += 1;
+            }
+            if(keys['s'] || keys['arrowdown']) {
+                moveVector.z -= 1;
+            }
+            if(keys['a'] || keys['arrowleft']) {
+				moveVector.x += 1;
+            }
+            if(keys['d'] || keys['arrowright']) {
+                moveVector.x -= 1;
+            }
+            
+            // Нормализуем вектор движения если нужно
+            if(moveVector.length() > 0) {
+                moveVector.normalize();
+                
+                // Поворачиваем вектор движения относительно камеры
+                const angle = camera.rotation.y;
+                const x = moveVector.x * Math.cos(angle) - moveVector.z * Math.sin(angle);
+                const z = moveVector.x * Math.sin(angle) + moveVector.z * Math.cos(angle);
+                
+                moveVector.x = x * moveSpeed;
+                moveVector.z = z * moveSpeed;
+                
+                // Поворачиваем игрока в направлении движения
+                player.rotation.y = Math.atan2(moveVector.x, moveVector.z);
+            }
+            
+            // Прыжок
+            if((keys[' '] || keys['space']) && player.isOnGround) {
+                player.velocity.y = jumpForce;
+                player.isOnGround = false;
+            }
+            
+            // Применяем движение
+            player.velocity.x = moveVector.x;
+            player.velocity.z = moveVector.z;
+            
+            // Сохраняем старую позицию для отката при коллизии
+            const oldPosition = player.position.clone();
+            
+            // Применяем скорость
+            player.position.x += player.velocity.x;
+            player.position.y += player.velocity.y * deltaTime * 60;
+            player.position.z += player.velocity.z;
+            
+            // Проверяем коллизии
+            const collided = checkCollisions();
+            
+            // Если упали ниже -100, телепортируем на старт
+            if(player.position.y < -50) {
+                player.position.set(0, 10, 10);
+                player.velocity.set(0, 0, 0);
+            }
+            
+            // Обновление подвижных платформ
+            updateMovingPlatforms(deltaTime);
+        }
+        
+        // Обновление подвижных платформ
+        function updateMovingPlatforms(deltaTime) {
+            for(let platform of movingPlatforms) {
+                if(platform.rotationSpeed) {
+                    platform.rotation.y += platform.rotationSpeed * deltaTime * 60;
+                }
+                
+                if(platform.moveSpeed) {
+                    platform.position.x += platform.moveSpeed * platform.moveDirection * deltaTime * 60;
+                    
+                    // Разворачиваем при достижении границ
+                    if(Math.abs(platform.position.x - platform.originalX) > 10) {
+                        platform.moveDirection *= -1;
+                    }
+                }
+            }
+        }
+        
+        // Обновление камеры
+        function updateCamera() {
+            if(!player) return;
+            
+            if(isThirdPerson) {
+                // Камера от третьего лица
+                const angle = camera.rotation.y;
+                const offsetX = Math.sin(angle) * cameraDistance;
+                const offsetZ = Math.cos(angle) * cameraDistance;
+                
+                camera.position.x = player.position.x - offsetX;
+                camera.position.y = player.position.y + cameraHeight;
+                camera.position.z = player.position.z - offsetZ;
+                
+                camera.lookAt(
+                    player.position.x,
+                    player.position.y + 2,
+                    player.position.z
+                );
+            } else {
+                // Камера от первого лица
+                camera.position.x = player.position.x;
+                camera.position.y = player.position.y + 2;
+                camera.position.z = player.position.z;
+                
+                camera.rotation.x = mouse.y;
+                camera.rotation.y = mouse.x;
+            }
+        }
+        
+        // Анимация
+        function animate() {
+            requestAnimationFrame(animate);
+            delta = clock.getDelta();
+            
+            if(currentGame !== '' && player) {
+                updatePlayer(delta);
+                updateCamera();
+                
+                // Анимация вращения звезд
+                gameObjects.forEach(obj => {
+                    if(obj.userData && obj.userData.type === 'collectible' && !obj.userData.collected) {
+                        obj.rotation.y += 0.05;
+                    }
+                });
+            }
+            
+            renderer.render(scene, camera);
+        }
+        
+        // Обработчики событий
+        function onKeyDown(event) {
+            const key = event.key.toLowerCase();
+            keys[key] = true;
+            
+            // Переключение вида на F
+            if(key === 'f') {
+                toggleView();
+            }
+            
+            // Предотвращаем прокрутку страницы пробелом
+            if(key === ' ') {
+                event.preventDefault();
+            }
+        }
+        
+        function onKeyUp(event) {
+            keys[event.key.toLowerCase()] = false;
+        }
+        
+        function onMouseMove(event) {
+            if(document.pointerLockElement === document.body) {
+                mouse.x += event.movementX * 0.002;
+                mouse.y += event.movementY * 0.002;
+                
+                // Ограничение вертикального вращения
+                mouse.y = Math.max(-Math.PI/2, Math.min(Math.PI/2, mouse.y));
+            }
+        }
+        
+        function lockPointer() {
+            if(currentGame !== '') {
+                document.body.requestPointerLock();
+            }
+        }
+        
+        function onWindowResize() {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        }
+        
+        // Переключение вида
+        function toggleView() {
+            isThirdPerson = !isThirdPerson;
+            document.querySelector('.view-toggle').textContent = 
+                `Переключить вид (${isThirdPerson ? '3-е лицо' : '1-е лицо'})`;
+            
+            if(isThirdPerson) {
+                cameraDistance = 8;
+                cameraHeight = 4;
+            }
+        }
+        
+        // Возврат в меню
+        function backToMenu() {
+            currentGame = '';
+            document.getElementById('gameMenu').style.display = 'flex';
+            document.getElementById('gameUI').style.display = 'none';
+            document.querySelector('.back-button').style.display = 'none';
+            document.querySelector('.view-toggle').style.display = 'none';
+            
+            // Выход из блокировки указателя
+            if(document.pointerLockElement) {
+                document.exitPointerLock();
+            }
+        }
+        
+        // Запуск при загрузке
+        window.onload = init;
+    </script>
+</body>
+</html> 
